@@ -1,0 +1,233 @@
+###BMMB 852 HW2
+1. Cyprinodon variegatus, aka the sheephead minnow or sheephead pupfish, is a species of ray-finned fish. It can be found in the salt marshes on the east coasts of North and Central America.
+   It can grow up to 3 inches and is best known for its ability to adapt to varying salinity levels.
+2. 821648 features 
+3. I am not sure why when I got to this step it gave me an error (see in my code).
+4. There are 23019 genes listed.
+5. The top ten most common feature types are exon, CDS, mRNA, five_prime_UTR, gene, three_prime_UTR, biological_region, region, ncRNA_gene, and snoRNA.
+6. Yes this seems to be a well-annotated organism.
+
+#Download file
+ecouser@DESKTOP-AKAEE2M ~
+$ wget https://ftp.ensembl.org/pub/current_gff3/cyprinodon_variegatus/Cyprinodon_variegatus.C_variegatus-1.0.112.gff3.gz
+--2024-09-08 17:19:01--  https://ftp.ensembl.org/pub/current_gff3/cyprinodon_variegatus/Cyprinodon_variegatus.C_variegatus-1.0.112.gff3.gz
+Resolving ftp.ensembl.org (ftp.ensembl.org)... 193.62.193.169
+Connecting to ftp.ensembl.org (ftp.ensembl.org)|193.62.193.169|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 10617661 (10M) [application/x-gzip]
+Saving to: 'Cyprinodon_variegatus.C_variegatus-1.0.112.gff3.gz'
+
+Cyprinodon_vari 100%[====>]  10.12M   540KB/s    in 20s
+
+2024-09-08 17:19:21 (521 KB/s) - 'Cyprinodon_variegatus.C_variegatus-1.0.112.gff3.gz' saved [10617661/10617661]
+
+ecouser@DESKTOP-AKAEE2M ~
+$ conda activate bioinfo
+(bioinfo)
+
+ecouser@DESKTOP-AKAEE2M ~
+$ ls
+Cyprinodon_variegatus.C_variegatus-1.0.112.gff3.gz
+bin
+bioinformatics
+bioniformatics
+edirect
+edu
+micromamba
+parent_dir
+studies
+work
+(bioinfo)
+
+#Unzip file
+ecouser@DESKTOP-AKAEE2M ~
+$ gunzip Cyprinodon_variegatus.C_variegatus-1.0.112.gff3.gz
+
+ecouser@DESKTOP-AKAEE2M ~
+$ ls
+Cyprinodon_variegatus.C_variegatus-1.0.112.gff3  edu
+bin                                              micromamba
+bioinformatics                                   parent_dir
+bioniformatics                                   studies
+edirect                                          work
+(bioinfo)
+
+#How big is the file?
+ecouser@DESKTOP-AKAEE2M ~
+$ ls -l
+total 124M
+-rw-r--r-- 1 ecouser ecouser 124M Mar  5  2024 Cyprinodon_variegatus.C_variegatus-1.0.112.gff3
+drwxr-xr-x 3 ecouser ecouser 4.0K Aug 27 16:05 bin
+drwxr-xr-x 4 ecouser ecouser 4.0K Aug 28 17:39 bioinformatics
+drwxr-xr-x 3 ecouser ecouser 4.0K Aug 28 18:18 bioniformatics
+drwxr-xr-x 7 ecouser ecouser 4.0K Aug 27 16:05 edirect
+drwxr-xr-x 3 ecouser ecouser 4.0K Aug 28 11:57 edu
+drwxr-xr-x 6 ecouser ecouser 4.0K Aug 27 16:04 micromamba
+drwxr-xr-x 3 ecouser ecouser 4.0K Aug 28 16:56 parent_dir
+drwxr-xr-x 3 ecouser ecouser 4.0K Aug 28 17:03 studies
+drwxr-xr-x 7 ecouser ecouser 4.0K Aug 27 16:15 work
+(bioinfo)
+
+#How many lines is the file?
+ecouser@DESKTOP-AKAEE2M ~
+$ cat Cyprinodon_variegatus.C_variegatus-1.0.112.gff3 | wc -l
+821648
+(bioinfo)
+
+#print head
+ecouser@DESKTOP-AKAEE2M ~
+$ cat Cyprinodon_variegatus.C_variegatus-1.0.112.gff3 | head
+##gff-version 3
+##sequence-region   JPKM01095229.1 1 78823
+##sequence-region   JPKM01097702.1 1 55185
+##sequence-region   JPKM01097741.1 1 55057
+##sequence-region   JPKM01100000.1 1 33715
+##sequence-region   JPKM01101084.1 1 24462
+##sequence-region   JPKM01101207.1 1 23389
+##sequence-region   JPKM01101290.1 1 22677
+##sequence-region   JPKM01101291.1 1 22661
+##sequence-region   JPKM01102216.1 1 15975
+(bioinfo)
+
+#print tail
+ecouser@DESKTOP-AKAEE2M ~
+$ cat Cyprinodon_variegatus.C_variegatus-1.0.112.gff3  | tail
+MT      RefSeq  CDS     14386   15525   .       +       0   ID=CDS:ENSCVAP00000000014;Parent=transcript:ENSCVAT00000000036;protein_id=ENSCVAP00000000014
+###
+MT      RefSeq  ncRNA_gene      15527   15598   .       +   .ID=gene:ENSCVAG00000000037;biotype=Mt_tRNA;gene_id=ENSCVAG00000000037;logic_name=mt_genbank_import;version=1
+MT      RefSeq  tRNA    15527   15598   .       +       .   ID=transcript:ENSCVAT00000000037;Parent=gene:ENSCVAG00000000037;biotype=Mt_tRNA;tag=Ensembl_canonical;transcript_id=ENSCVAT00000000037;version=1
+MT      RefSeq  exon    15527   15598   .       +       .   Parent=transcript:ENSCVAT00000000037;Name=ENSCVAE00000000037;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSCVAE00000000037;rank=1;version=1
+###
+MT      RefSeq  ncRNA_gene      15598   15667   .       -   .ID=gene:ENSCVAG00000000038;biotype=Mt_tRNA;gene_id=ENSCVAG00000000038;logic_name=mt_genbank_import;version=1
+MT      RefSeq  tRNA    15598   15667   .       -       .   ID=transcript:ENSCVAT00000000038;Parent=gene:ENSCVAG00000000038;biotype=Mt_tRNA;tag=Ensembl_canonical;transcript_id=ENSCVAT00000000038;version=1
+MT      RefSeq  exon    15598   15667   .       -       .   Parent=transcript:ENSCVAT00000000038;Name=ENSCVAE00000000038;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSCVAE00000000038;rank=1;version=1
+###
+(bioinfo)
+
+#filtering out sequence regions
+ecouser@DESKTOP-AKAEE2M ~
+$ cat Cyprinodon_variegatus.C_variegatus-1.0.112.gff3 | head
+##gff-version 3
+##sequence-region   JPKM01095229.1 1 78823
+##sequence-region   JPKM01097702.1 1 55185
+##sequence-region   JPKM01097741.1 1 55057
+##sequence-region   JPKM01100000.1 1 33715
+##sequence-region   JPKM01101084.1 1 24462
+##sequence-region   JPKM01101207.1 1 23389
+##sequence-region   JPKM01101290.1 1 22677
+##sequence-region   JPKM01101291.1 1 22661
+##sequence-region   JPKM01102216.1 1 15975
+(bioinfo)
+#how many sequence regions?
+ecouser@DESKTOP-AKAEE2M ~
+$  Cyprinodon_variegatus.C_variegatus-1.0.1
+12.gff3 | grep JPKM | wc -l
+Cyprinodon_variegatus.C_variegatus-1.0.1: command not found
+12.gff3: command not found
+0
+(bioinfo)
+
+ecouser@DESKTOP-AKAEE2M ~
+$ cat Cyprinodon_variegatus.C_variegatus-1.0.112.gff3 | grep
+-v '#' > cypr.gff3
+(bioinfo)
+
+ecouser@DESKTOP-AKAEE2M ~
+$ cat cypr.gff3 | head
+JPKM01095229.1  C_variegatus-1.0        region  1       78823.       .       .       ID=region:JPKM01095229.1;Alias=Scaffold1857,NW_015152310.1
+JPKM01095229.1  ensembl gene    6040    10451   .       -   .ID=gene:ENSCVAG00000023336;biotype=protein_coding;gene_id=ENSCVAG00000023336;logic_name=ensembl;version=1
+JPKM01095229.1  ensembl mRNA    6040    10451   .       -   .ID=transcript:ENSCVAT00000029146;Parent=gene:ENSCVAG00000023336;biotype=protein_coding;tag=Ensembl_canonical;transcript_id=ENSCVAT00000029146;version=1
+JPKM01095229.1  ensembl exon    6040    6138    .       -   .Parent=transcript:ENSCVAT00000029146;Name=ENSCVAE00000115652;constitutive=1;ensembl_end_phase=0;ensembl_phase=0;exon_id=ENSCVAE00000115652;rank=2;version=1
+JPKM01095229.1  ensembl CDS     6040    6138    .       -   0ID=CDS:ENSCVAP00000032923;Parent=transcript:ENSCVAT00000029146;protein_id=ENSCVAP00000032923
+JPKM01095229.1  ensembl exon    10335   10451   .       -   .Parent=transcript:ENSCVAT00000029146;Name=ENSCVAE00000237754;constitutive=1;ensembl_end_phase=0;ensembl_phase=0;exon_id=ENSCVAE00000237754;rank=1;version=1
+JPKM01095229.1  ensembl CDS     10335   10451   .       -   0ID=CDS:ENSCVAP00000032923;Parent=transcript:ENSCVAT00000029146;protein_id=ENSCVAP00000032923
+JPKM01095229.1  ensembl gene    12021   22772   .       +   .ID=gene:ENSCVAG00000023328;Name=acbd5a;biotype=protein_coding;description=acyl-CoA binding domain containing 5 [Source:NCBI gene%3BAcc:107104717];gene_id=ENSCVAG00000023328;logic_name=ensembl;version=1
+JPKM01095229.1  ensembl mRNA    12021   22772   .       +   .ID=transcript:ENSCVAT00000029141;Parent=gene:ENSCVAG00000023328;Name=acbd5a-201;biotype=protein_coding;tag=Ensembl_canonical;transcript_id=ENSCVAT00000029141;version=1
+JPKM01095229.1  ensembl exon    12021   12100   .       +   .Parent=transcript:ENSCVAT00000029141;Name=ENSCVAE00000237697;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSCVAE00000237697;rank=1;version=1
+(bioinfo)
+
+ecouser@DESKTOP-AKAEE2M ~
+$ cat cypr.gff3 | cut -f 1,2 | head
+JPKM01095229.1  C_variegatus-1.0
+JPKM01095229.1  ensembl
+JPKM01095229.1  ensembl
+JPKM01095229.1  ensembl
+JPKM01095229.1  ensembl
+JPKM01095229.1  ensembl
+JPKM01095229.1  ensembl
+JPKM01095229.1  ensembl
+JPKM01095229.1  ensembl
+JPKM01095229.1  ensembl
+(bioinfo)
+
+ecouser@DESKTOP-AKAEE2M ~
+$ cat cypr.gff3 | cut -f 3 | head
+region
+gene
+mRNA
+exon
+CDS
+exon
+CDS
+gene
+mRNA
+exon
+(bioinfo)
+
+ecouser@DESKTOP-AKAEE2M ~
+$ cat cypr.gff3 | cut -f 3 | sort | uniq | head
+CDS
+J_gene_segment
+V_gene_segment
+biological_region
+exon
+five_prime_UTR
+gene
+lnc_RNA
+mRNA
+miRNA
+(bioinfo)
+
+#how many genes? Most common feature types?
+ecouser@DESKTOP-AKAEE2M ~
+$  cat cypr.gff3 | cut -f 3 | sort | uniq -c | head
+ 326230 CDS
+      2 J_gene_segment
+     24 V_gene_segment
+  11664 biological_region
+ 333767 exon
+  24017 five_prime_UTR
+  23019 gene
+      4 lnc_RNA
+  32898 mRNA
+     64 miRNA
+(bioinfo)
+
+ecouser@DESKTOP-AKAEE2M ~
+$ cat cypr.gff3 | cut -f 3 | sort | uniq -c | sort | head
+      2 J_gene_segment
+      4 lnc_RNA
+      9 scRNA
+     13 transcript
+     22 tRNA
+     24 V_gene_segment
+     35 pseudogene
+     35 pseudogenic_transcript
+     50 rRNA
+     64 miRNA
+(bioinfo) 
+
+ecouser@DESKTOP-AKAEE2M ~
+$ cat cypr.gff3 | cut -f 3 | sort | uniq -c | sort -rn | head
+ 333767 exon
+ 326230 CDS
+  32898 mRNA
+  24017 five_prime_UTR
+  23019 gene
+  17908 three_prime_UTR
+  11664 biological_region
+   9259 region
+    404 ncRNA_gene
+    175 snoRNA
+(bioinfo)
+
