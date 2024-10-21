@@ -20,9 +20,13 @@ usage:
 	@echo "Usage:"
 	@echo "  make genome      - Download the genome"
 	@echo "  make simulate    - Simulate reads for the genome"
-	@echo "  make download     - Download reads from SRA"
+	@echo "  make download    - Download reads from SRA"
 	@echo "  make trim        - Trim SRA reads"
 	@echo "  make clean       - Remove all generated files"
+	@echo "  make index       - Index reference genome
+	@echo "  make align       - Align reads to ref genome
+	@echo "  make BAM         - Convert SAM to BAM
+	@echo "  make stat        - Generate alignment stats
 
 # Target: genome
 .PHONY: genome
