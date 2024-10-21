@@ -76,21 +76,25 @@ clean:
 
 # Target: index
 .PHONY: index
+index:
 	@echo "Indexing the reference genome..."
 	bwa index ${REF} 
 
 # Target: align
 .PHONY: align
+align:
 	@echo "Aligning reads to the reference genome..."
 	bwa mem ${REF} ${R1} ${R2} > ${SAM}
 
 # Target: BAM
 .PHONY: BAM
+BAM:
 	@echo "Converting SAM to BAM..."
 	cat ${SAM} | samtools sort > ${BAM}
 	samtools index ${BAM}
 
 #Target: stat
-.PHONY: state
+.PHONY: stat
+stat:
 	@echo "Generating alignment statistics... "
 	samtools flagstat ${BAM}
