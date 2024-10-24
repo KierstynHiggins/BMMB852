@@ -5,6 +5,7 @@ GENOME = GCF_000013425.1
 FILE = $(GENOME)_ASM1342V1_genomic.fna
 LENGTH = 150
 COVERAGE = 10
+N = 200000
 SRA = SRR5837600
 REF = brachy-2017.fa
 R1 = $(SRA)_1.fastq
@@ -13,9 +14,20 @@ R1_CUT = $(SRA)_1.trimmed.fastq
 R2_CUT = $(SRA)_2.trimmed.fastq
 BAM = align.bam
 SAM = align.sam
+R1sim = simulated_reads_1.fq
+R2sim = simulated_reads_1.fq
+SAMsim = align_sim.sam
+BAMsim = align_sim.bam
+#------------------------------------------------------------------------------
+#
+SHELL := bash
+.ONESHELL:
+.SHELLFLAGS := -eu -o pipefail -c
+.DELETE_ON_ERROR:
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-builtin-rules
 
 # Target: usage
-.PHONY: usage
 usage:
 	@echo "Usage:"
 	@echo "  make genome      - Download the genome"
@@ -29,7 +41,6 @@ usage:
 	@echo "  make stat        - Generate alignment stats
 
 # Target: genome
-.PHONY: genome
 genome:
 	@echo "Downloading genome..."
 	datasets download genome accession $(GENOME) --include gff3,cds,protein,rna,genome && \
@@ -43,58 +54,45 @@ genome:
 	@grep '^>' genome.fa | awk '{name=$$1; getline; print name, length($$0)}' | sed 's/>//g'
 
 # Target: simulate
-.PHONY: simulate
-simulate: genome
-	@echo "Simulating reads for the genome..."
-	GENOME_LENGTH=$$(grep -v '^>' genome.fa | tr -d '\n' | wc -c); \
-	NUM_READS=$$(((COVERAGE * GENOME_LENGTH) / $(LENGTH))); \
-	wgsim -N $$NUM_READS -1 $(LENGTH) -2 $(LENGTH) -e 0.02 -r 0.05 -R 0.15 -X 0.3 genome.fa simulated_reads_1.fq simulated_reads_2.fq; \
-	@echo "Simulated FASTQ files: simulated_reads_1.fq and simulated_reads_2.fq"; \
-	@echo "Number of reads generated: $$NUM_READS"; \
-	gzip simulated_reads_1.fq simulated_reads_2.fq; \
-	@echo "Files compressed to: simulated_reads_1.fq.gz, simulated_reads_2.fq.gz"
-
+simulate: 
+	@echo "Simulated FASTQ files: simulated_reads_1.fq and simulated_reads_2.fq"
+	wgsim -N ${N} -1 ${LENGTH} -2 ${LENGTH} -e 0 -r 0 -R 0 -X 0 genome.fa ${R1sim} ${R2sim}
+	seqkit stats ${R1sim} ${R2sim}
 # Target: download
-.PHONY: download
 download:
 	@echo "Downloading reads from SRA using fastq-dump..."
 	fastq-dump -X 10000 --split-files $(SRA)
 
 # Target: trim
-.PHONY: trim
-trim: download
+trim: 
 	@echo "Trimming FASTQ files..."
 	fastqc $(R1) $(R2)
 	fastp --cut_tail -i $(R1) -o $(R1_CUT) -I $(R2) -O $(R2_CUT)
 	fastqc $(R1_CUT)
 
-# Target: clean
-.PHONY: clean
-clean:
-	@echo "Cleaning up..."
-	rm -f genome.fa simulated_reads_1.fq.gz simulated_reads_2.fq.gz ncbi_dataset.zip $(R1) $(R2) $(R1_CUT) $(R2_CUT)
 
 # Target: index
-.PHONY: index
 index:
 	@echo "Indexing the reference genome..."
 	bwa index ${REF} 
 
 # Target: align
-.PHONY: align
 align:
 	@echo "Aligning reads to the reference genome..."
 	bwa mem ${REF} ${R1} ${R2} > ${SAM}
-
+	@echo "Aligning simulated reads to reference genome..."
+	bwa mem ${REF} ${R1sim} ${R2sim} > ${SAMsim}
 # Target: BAM
-.PHONY: BAM
 BAM:
 	@echo "Converting SAM to BAM..."
 	cat ${SAM} | samtools sort > ${BAM}
 	samtools index ${BAM}
-
-#Target: stat
-.PHONY: stat
+	@echo "Converting SAMsim to BAMsim..."
+	cat ${SAMsim} | samtools sort > ${BAMsim}
+	samtools index ${BAMsim}
+# Target: stat
 stat:
 	@echo "Generating alignment statistics... "
 	samtools flagstat ${BAM}
+	samtools flagstat ${BAMsim}
+
