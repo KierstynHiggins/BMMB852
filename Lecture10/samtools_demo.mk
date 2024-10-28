@@ -1,4 +1,6 @@
-# Makefile for Genome and SRA Processing
+# BMMB:852 BAM and SAMTOOLS demo
+# Updated 10/28/24 2:33 pm
+# Kierstyn Higgins
 
 # Variables
 GENOME = GCF_000013425.1
@@ -6,13 +8,14 @@ FILE = $(GENOME)_ASM1342V1_genomic.fna
 LENGTH = 150
 COVERAGE = 10
 N = 200000
-SRA = SRR5837600
-REF = brachy-2017.fa
+SRA = ERR13649352
+REF = genome.fa
 R1 = $(SRA)_1.fastq
 R2 = $(SRA)_2.fastq
 R1_CUT = $(SRA)_1.trimmed.fastq
 R2_CUT = $(SRA)_2.trimmed.fastq
 BAM = align.bam
+FILTERED_BAM = filtered.bam
 SAM = align.sam
 R1sim = simulated_reads_1.fq
 R2sim = simulated_reads_1.fq
@@ -38,8 +41,11 @@ usage:
 	@echo "  make index       - Index reference genome
 	@echo "  make align       - Align reads to ref genome
 	@echo "  make BAM         - Convert SAM to BAM
+	@echo "  make BAM_sim     - Converts SAMsim to BAMsim
 	@echo "  make stat        - Generate alignment stats
-
+	@echo "  make counts      - Counts reads for various specifications
+	@echo "  make filter      - Creates filtered BAM file
+	@echo "  make flagstats   - Gives stats for original and filtered BAM file
 # Target: genome
 genome:
 	@echo "Downloading genome..."
@@ -88,6 +94,9 @@ BAM:
 	@echo "Converting SAM to BAM..."
 	cat ${SAM} | samtools sort > ${BAM}
 	samtools index ${BAM}
+
+# Target: BAM_sim
+BAM_sim:
 	@echo "Converting SAMsim to BAMsim..."
 	cat ${SAMsim} | samtools sort > ${BAMsim}
 	samtools index ${BAMsim}
