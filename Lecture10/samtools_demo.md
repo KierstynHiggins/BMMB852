@@ -9,13 +9,14 @@ FILE = $(GENOME)_ASM1342V1_genomic.fna
 LENGTH = 150
 COVERAGE = 10
 N = 200000
-SRA = SRR5837600
-REF = brachy-2017.fa
+SRA = ERR13649352
+REF = genome.fa
 R1 = $(SRA)_1.fastq
 R2 = $(SRA)_2.fastq
 R1_CUT = $(SRA)_1.trimmed.fastq
 R2_CUT = $(SRA)_2.trimmed.fastq
 BAM = align.bam
+FILTERED_BAM = filtered.bam
 SAM = align.sam
 R1sim = simulated_reads_1.fq
 R2sim = simulated_reads_1.fq
@@ -41,7 +42,11 @@ usage:
 	@echo "  make index       - Index reference genome
 	@echo "  make align       - Align reads to ref genome
 	@echo "  make BAM         - Convert SAM to BAM
+	@echo "  make BAM_sim     - Converts SAMsim to BAMsim
 	@echo "  make stat        - Generate alignment stats
+	@echo "  make counts      - Counts reads for various specifications
+	@echo "  make filter      - Creates filtered BAM file
+	@echo "  make flagstats   - Gives stats for original and filtered BAM file
 ```
 `Genome`: This target downloads the specified genome and prepares the genomic file for use. It uses the datasets download command to download the genome associated with the specified accession number. It then unzips the downloaded dataset and creates a symbolic link to the genomic FASTA file, renaming it to genome.fa. It also outputs the size of the file, the total number of bases in the genome, the number of chromosomes, and the lengths of each chromosome.
 ```bash
@@ -98,11 +103,14 @@ BAM:
 	@echo "Converting SAM to BAM..."
 	cat ${SAM} | samtools sort > ${BAM}
 	samtools index ${BAM}
+```
+You can then visualize the BAM file in IGV. 
+`BAM_sim`: This generates a BAM file from SAMsim.
+```bash
 	@echo "Converting SAMsim to BAMsim..."
 	cat ${SAMsim} | samtools sort > ${BAMsim}
 	samtools index ${BAMsim}
 ```
-You can then visualize the BAM file in IGV. 
 
 `stat`: This will generate alignment statistics.
 ```bash
@@ -113,7 +121,8 @@ stat:
 ```
 It will output...
 ```bash
-$ samtools flagstat align.bam
+$ make stat
+Generating alignment statistics... 
 20004 + 0 in total (QC-passed reads + QC-failed reads)
 20000 + 0 primary
 0 + 0 secondary
@@ -130,8 +139,26 @@ $ samtools flagstat align.bam
 0 + 0 singletons (0.00% : N/A)
 0 + 0 with mate mapped to a different chr
 0 + 0 with mate mapped to a different chr (mapQ>=5)
+404482 + 0 in total (QC-passed reads + QC-failed reads)
+400000 + 0 primary
+0 + 0 secondary
+4482 + 0 supplementary
+0 + 0 duplicates
+0 + 0 primary duplicates
+404482 + 0 mapped (100.00% : N/A)
+400000 + 0 primary mapped (100.00% : N/A)
+400000 + 0 paired in sequencing
+200000 + 0 read1
+200000 + 0 read2
+0 + 0 properly paired (0.00% : N/A)
+400000 + 0 with itself and mate mapped
+0 + 0 singletons (0.00% : N/A)
+0 + 0 with mate mapped to a different chr
+0 + 0 with mate mapped to a different chr (mapQ>=5)
 ```
-For some reason, the BAM file refused to generate for the simulated reads and I can't figure out what I'm doing wrong. Therefore, I couldn't really compare the two.
+The first summary shows that only a small number of reads (8) are actually mapped, indicating that the original BAM file might have had significant issues with read quality or alignment.The second summary shows a much larger number of reads (404,482) and indicates that they are all mapped, suggesting this might be from a better-aligned dataset or after successful filtering.
+
+I tried using a different reference genome, a different SRA number, different fastqc methods and nothing changed. I really can't figure out why.
 
 `counts`: This target will count the alignments that we selected for.
 ```bash
@@ -206,4 +233,4 @@ Flagstats for filtered BAM file:
 0 + 0 with mate mapped to a different chr
 0 + 0 with mate mapped to a different chr (mapQ>=5)
 ```
-In the original file, 8 reads are mapped to the reference genome and 0 are properly paired. In the filtered file, none of the reads are mapped. I think I just chose a very poor example for the SRA.
+Here I tried changing the MQ threshold but that still didn't change the results.
