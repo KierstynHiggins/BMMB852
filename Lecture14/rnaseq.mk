@@ -37,6 +37,11 @@ FLAGS = --eta --lb --header : --colsep ,
 
 # Number of CPUS to use
 NCPU = 4
+
+# Directories
+BAM_DIR=bam
+SORTED_BAM_DIR=sorted_bam
+INDEX_DIR=index
 # ____________________________________________________________________________________
 # Print usage
 usage:
@@ -73,14 +78,12 @@ index:
 
 # Run the alignment
 align: ${DESIGN}
-	# Runs the alignment in parallel over all samples.
+	# Runs the alignment in parallel over all samples and converts SAM to BAM, sorts, and indexes.
 	cat ${DESIGN} | parallel ${FLAGS} \
-		hisat2-build refs/staph-2006.fa refs/staph-2006.idx \
-		NCPU=${NCPU} \
-		REF=${REF} \
-		R1=reads/{sample}_R1.fq \
-		BAM=bam/{sample}.bam \
-		run
+		hisat2 -x ${REF} -1 reads/{sample}_R1.fq -2 reads/{sample}_R2.fq -S ${BAM_DIR}/{sample}.sam \
+		&& samtools view -bS ${BAM_DIR}/{sample}.sam > ${BAM_DIR}/{sample}.bam \
+		&& samtools sort ${BAM_DIR}/{sample}.bam -o ${SORTED_BAM_DIR}/{sample}_sorted.bam \
+		&& samtools index ${SORTED_BAM_DIR}/{sample}_sorted.bam
 
 # The counts as textfile produced by featurecounts.
 ${COUNTS_TXT}:
