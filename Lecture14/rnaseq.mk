@@ -1,14 +1,17 @@
 # RNA seq Makefile
 ## Kierstyn Higgins
+### 12/08/2024
 
-# The URL for the data.
-DATA_URL = https://api.ncbi.nlm.nih.gov/datasets/v2/genome/download?filename=ncbi_dataset.zip&ncbi_phid=322CB9919F68EEE500003635566DC9E4.1.m_3.020
-
-# The downloaded data file name.
-DATA_FILE = $(notdir ${DATA_URL})
+#### Set variables here.
 
 # The project name for reads.
-PRJ=PRJNA976947
+PRJ=PRJNA699466
+
+# SRR NUMBER.
+SRR = SRR13628155
+
+# Accession number of the Staphylococcus aureus genome.
+ACC=GCF_000013425.1
 
 # Genome reference.
 REF=ncbi_dataset/refs/staph-2006.fa
@@ -25,86 +28,131 @@ COUNTS = res/counts-hisat.csv
 # The design file
 DESIGN = design.csv
 
-# Makefile settings
-SHELL := bash
-.DELETE_ON_ERROR:
-.ONESHELL:
-.SHELLFLAGS := -eu -o pipefail -c
-MAKEFLAGS += --warn-undefined-variables --no-print-directory
+# Sample alias.
+SAMPLE = GSM5064589
+
+# Extract the sample names from the first 3 rows of design.csv (adjust head if needed)
+SAMPLES=$(head -3 design.csv | cut -d',' -f1)
+
+# Output csv.
+OUTPUT_CSV="combined_data.csv"
 
 # Flags passed to parallel.
 FLAGS = --eta --lb --header : --colsep ,
 
 # Number of CPUS to use
 NCPU = 4
+# Number of reads.
+N = 5000
+
+# The GFF file.
+GFF=refs/staph-2006.gff
 
 # Directories
 BAM_DIR=bam
-SORTED_BAM_DIR=sorted_bam
-INDEX_DIR=index
+
+# The path to read 1
+R1=reads/${SRR}_1.fastq
+
+# The path to read 2
+R2=reads/${SRR}_2.fastq
+
+# The resulting BAM file.
+BAM=bam/${SRR}.bam
+#_______________________________________________________________________________________
+# Makefile settings
+SHELL := bash
+.DELETE_ON_ERROR:
+.ONESHELL:
+.SHELLFLAGS := -eu -o pipefail -c
+MAKEFLAGS += --warn-undefined-variables --no-print-directory
 # ____________________________________________________________________________________
 # Print usage
 usage:
 	
-	@echo "# REF=${REF}"
-	@echo "# GTF=${GTF}"
-	@echo "# DESIGN=${DESIGN}"
-	@echo "# COUNTS=${COUNTS}"
-	@echo "#"
-
-	@echo "# make data   (downloads the FASTQ, GTF and FASTA files)"
-	@echo "# make index  (generates the hisat2 index)"
 	@echo "# make design (generates the ${DESIGN} file)"
-	@echo "# make align  (aligns reads into BAM files)"
+	@echo "# make bam (aligns reads into BAM files)"
 	@echo "# make count  (counts the reads in the BAM files)"
-	@echo "#"
-
+	@echo "# make csv (converts txt file to csv format)
 	@echo "# make all    (runs all steps)"
-	@echo "#"
 
 # Generate the design file.
 design: 
 	bio search ${PRJ} -H --csv > ${DESIGN}
 
-# Download the sequencing data and references.
-data: 
-	curl -L "https://api.ncbi.nlm.nih.gov/datasets/v2/genome/accession/GCF_000013425.1/download?include_annotation_type=GENOME_FASTA&include_annotation_type=GENOME_GFF&include_annotation_type=RNA_FASTA&include_annotation_type=CDS_FASTA&include_annotation_type=PROT_FASTA&include_annotation_type=SEQUENCE_REPORT&hydrated=FULLY_HYDRATED" -o ncbi_dataset.zip
-unzip:
-	unzip ncbi_dataset.zip -d ncbi_dataset
 
-# Generate the HISAT2 index
-index:
-	make -f src/run/hisat2.mk index REF=${REF}
+# Create the BAM alignment file.
+bam: ${DESIGN}
+	# Get the reference genome and the annotations.
+	make -f src/run/genbank.mk ACC=${ACC} REF=${REF} GFF=${GFF} fasta gff
 
-# Run the alignment
-align: ${DESIGN}
-	# Runs the alignment in parallel over all samples and converts SAM to BAM, sorts, and indexes.
-	cat ${DESIGN} | parallel ${FLAGS} \
-		hisat2 -x ${REF} -1 reads/{sample}_R1.fq -2 reads/{sample}_R2.fq -S ${BAM_DIR}/{sample}.sam \
-		&& samtools view -bS ${BAM_DIR}/{sample}.sam > ${BAM_DIR}/{sample}.bam \
-		&& samtools sort ${BAM_DIR}/{sample}.bam -o ${SORTED_BAM_DIR}/{sample}_sorted.bam \
-		&& samtools index ${SORTED_BAM_DIR}/{sample}_sorted.bam
+	# Index the reference genome.
+	make -f src/run/hisat2.mk REF=${REF} index
 
-# The counts as textfile produced by featurecounts.
-${COUNTS_TXT}:
-	# Make the directory name for the counts
-	mkdir -p $(dir $@)
+	# Download the sequence data using fastq-dump.
+	make fastq-dump
 
-	# Count the features
-	cat ${DESIGN} | \
-		parallel --header : --colsep , -k echo bam/{sample}.bam | \
-		parallel -u --xargs featureCounts -a ${GTF} -o ${COUNTS_TXT} {}
+	# Align the reads to the reference genome. 
+	# Use a sample name in the readgroup.
+	make -f src/run/hisat2.mk SM=${SAMPLE} REF=${REF} R1=${R1} R2=${R2} BAM=${BAM} run 
+
+# Download the sequence data using fastq-dump
+fastq-dump:
+	# Check if the 'reads' directory exists, if not create it
+	mkdir -p reads
+	
+	# Run fastq-dump to fetch the paired-end reads and split them
+	# --split-files will generate two separate fastq files: R1 and R2
+	# --outdir specifies the directory where the fastq files will be stored
+	echo "Downloading ${SRR} using fastq-dump..."
+	fastq-dump --split-files --outdir reads ${SRR}
+
+	# Optionally, limit the number of reads if needed (N = 50000)
+	if [ -n "$(N)" ]; then
+		head -n $(N) reads/${SRR}_1.fastq > reads/${SRR}_1_subset.fastq
+		head -n $(N) reads/${SRR}_2.fastq > reads/${SRR}_2_subset.fastq
+		mv reads/${SRR}_1_subset.fastq reads/${SRR}_1.fastq
+		mv reads/${SRR}_2_subset.fastq reads/${SRR}_2.fastq
+	fi
+
+	# Verify that the files have been downloaded
+	ls -lh reads/${SRR}_1.fastq reads/${SRR}_2.fastq
+
+# Generate count data.
+count: ${DESIGN}
+	# Create the output directory
+	mkdir -p res/
+
+	# Count features for each sample
+	cat design.csv | grep -w ${SAMPLE} | cut -d',' -f1 | while read sample; do \
+		# Print the sample name being processed
+		echo "Processing sample: ${sample}"; \
+		featureCounts -a ${GTF} -o ${COUNTS_TXT} ${BAM_DIR}/${SRR}.bam; \
+	done
 
 # The final counts in CSV format.
-${COUNTS}: ${COUNTS_TXT}
+csv: ${COUNTS_TXT}
 	micromamba run -n stats Rscript src/r/format_featurecounts.r -c ${COUNTS_TXT} -o ${COUNTS}
 
-# Trigger the counting explicitly
-count: ${COUNTS}
-	@ls -lh ${COUNTS_TXT}
-	@ls -lh ${COUNTS}
+# Run all.
+all: design bam count csv
 
-all: data index align count
 
-.PHONY: usage design data index align count all
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
